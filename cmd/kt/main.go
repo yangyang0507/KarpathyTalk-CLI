@@ -62,6 +62,8 @@ func main() {
 		runPost(c, rest)
 	case "docs":
 		runDocs(c)
+	case "help":
+		runHelp(rest)
 	default:
 		fmt.Fprintf(os.Stderr, "kt: unknown command %q\n\n", cmd)
 		usage()
@@ -76,23 +78,122 @@ Usage:
   kt [--host <url>] <command> [flags]
 
 Commands:
-  timeline   Browse the public timeline
-  user       View a user's profile and posts
-  post       View a single post and its replies
-  docs       Fetch platform API documentation
+  timeline            Browse the public timeline
+  user <username>     View a user's profile and posts
+  post <id>           View a single post and its replies
+  docs                Fetch platform API documentation
 
 Global Flags:
   --host <url>   API root URL (default: https://karpathytalk.com)
   --version      Print version and exit
+
+Run "kt help <command>" for command-specific flags and examples.
 `, version)
+}
+
+func usageTimeline() {
+	fmt.Fprint(os.Stderr, `Browse the public timeline (root posts only).
+
+Usage:
+  kt timeline [flags]
+
+Flags:
+  --limit <n>      Posts per page (default: 20, max: 100)
+  --before <id>    Pagination cursor: load posts older than this ID
+  --json           Output raw JSON
+  --markdown       Output post content as Markdown
+
+Examples:
+  kt timeline
+  kt timeline --limit 50
+  kt timeline --before 230
+  kt timeline --json | jq '.posts[].author.username'
+  kt timeline --markdown > posts.md
+`)
+}
+
+func usageUser() {
+	fmt.Fprint(os.Stderr, `View a user's profile and their posts.
+
+Usage:
+  kt user <username> [flags]
+
+Flags:
+  --replies        Show only replies (default: root posts only)
+  --limit <n>      Posts per page (default: 20)
+  --before <id>    Pagination cursor
+  --json           Output raw JSON
+  --markdown       Output user profile Markdown with YAML frontmatter
+
+Examples:
+  kt user karpathy
+  kt user karpathy --replies
+  kt user karpathy --json | jq '.posts | length'
+  kt user karpathy --markdown > karpathy.md
+`)
+}
+
+func usagePost() {
+	fmt.Fprint(os.Stderr, `View a single post and its direct replies.
+
+Usage:
+  kt post <id> [flags]
+
+Flags:
+  --limit <n>       Replies per page (default: 20)
+  --json            Output raw JSON
+  --markdown        Post Markdown with YAML frontmatter
+  --raw             Raw post Markdown, no frontmatter
+  --revision <n>    View a specific revision (use with --markdown or --raw)
+
+Examples:
+  kt post 42
+  kt post 42 --raw | llm "summarize this"
+  kt post 42 --markdown > post-42.md
+  kt post 42 --revision 2 --raw
+`)
+}
+
+func usageDocs() {
+	fmt.Fprint(os.Stderr, `Fetch the KarpathyTalk API documentation as Markdown.
+
+Usage:
+  kt docs
+
+Examples:
+  kt docs
+  kt docs | llm "what API endpoints are available?"
+`)
+}
+
+func runHelp(args []string) {
+	if len(args) == 0 {
+		usage()
+		return
+	}
+	switch args[0] {
+	case "timeline":
+		usageTimeline()
+	case "user":
+		usageUser()
+	case "post":
+		usagePost()
+	case "docs":
+		usageDocs()
+	default:
+		fmt.Fprintf(os.Stderr, "kt: unknown command %q\n\n", args[0])
+		usage()
+		os.Exit(1)
+	}
 }
 
 func runTimeline(c *client.Client, args []string) {
 	fs := flag.NewFlagSet("timeline", flag.ExitOnError)
-	limit := fs.Int("limit", 20, "Number of posts per page (max 100)")
-	before := fs.Int64("before", 0, "Pagination cursor: load posts before this ID")
+	fs.Usage = usageTimeline
+	limit := fs.Int("limit", 20, "Posts per page (max 100)")
+	before := fs.Int64("before", 0, "Pagination cursor: load posts older than this ID")
 	asJSON := fs.Bool("json", false, "Output raw JSON")
-	asMarkdown := fs.Bool("markdown", false, "Output Markdown")
+	asMarkdown := fs.Bool("markdown", false, "Output post content as Markdown")
 	_, flags := splitArgs(args)
 	fs.Parse(flags)
 
@@ -134,16 +235,17 @@ func runTimeline(c *client.Client, args []string) {
 
 func runUser(c *client.Client, args []string) {
 	fs := flag.NewFlagSet("user", flag.ExitOnError)
-	replies := fs.Bool("replies", false, "Show only replies (default: root posts)")
-	limit := fs.Int("limit", 20, "Number of posts per page")
+	fs.Usage = usageUser
+	replies := fs.Bool("replies", false, "Show only replies (default: root posts only)")
+	limit := fs.Int("limit", 20, "Posts per page")
 	before := fs.Int64("before", 0, "Pagination cursor")
 	asJSON := fs.Bool("json", false, "Output raw JSON")
-	asMarkdown := fs.Bool("markdown", false, "Output user profile Markdown")
+	asMarkdown := fs.Bool("markdown", false, "Output user profile Markdown with YAML frontmatter")
 	positional, flags := splitArgs(args)
 	fs.Parse(flags)
 
 	if len(positional) < 1 {
-		fmt.Fprintln(os.Stderr, "usage: kt user <username> [flags]")
+		usageUser()
 		os.Exit(1)
 	}
 	username := positional[0]
@@ -198,21 +300,23 @@ func runUser(c *client.Client, args []string) {
 
 func runPost(c *client.Client, args []string) {
 	fs := flag.NewFlagSet("post", flag.ExitOnError)
+	fs.Usage = usagePost
 	limit := fs.Int("limit", 20, "Replies per page")
 	asJSON := fs.Bool("json", false, "Output raw JSON")
-	asMarkdown := fs.Bool("markdown", false, "Output post Markdown with frontmatter")
-	asRaw := fs.Bool("raw", false, "Output raw post Markdown (no frontmatter)")
-	revision := fs.Int("revision", 0, "View specific revision (use with --markdown/--raw)")
+	asMarkdown := fs.Bool("markdown", false, "Post Markdown with YAML frontmatter")
+	asRaw := fs.Bool("raw", false, "Raw post Markdown, no frontmatter")
+	revision := fs.Int("revision", 0, "View a specific revision (use with --markdown or --raw)")
 	positional, flags := splitArgs(args)
 	fs.Parse(flags)
 
 	if len(positional) < 1 {
-		fmt.Fprintln(os.Stderr, "usage: kt post <id> [flags]")
+		usagePost()
 		os.Exit(1)
 	}
 	id, err := strconv.ParseInt(positional[0], 10, 64)
 	if err != nil || id < 1 {
-		fmt.Fprintln(os.Stderr, "kt post: invalid post ID")
+		fmt.Fprintln(os.Stderr, "kt post: invalid post ID\n")
+		usagePost()
 		os.Exit(1)
 	}
 
