@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - uses: actions/setup-go@v5
         with:
@@ -22,3 +24,6 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+      - name: Test
+        run: go test ./...

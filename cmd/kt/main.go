@@ -12,6 +12,9 @@ import (
 	"kt/internal/tui"
 )
 
+// version is set at build time via -ldflags "-X main.version=<tag>".
+var version = "dev"
+
 func isTTY() bool {
 	return term.IsTerminal(int(os.Stdout.Fd()))
 }
@@ -32,8 +35,14 @@ func splitArgs(args []string) (positional []string, flags []string) {
 func main() {
 	// Global --host flag (must appear before subcommand)
 	host := flag.String("host", client.DefaultHost, "API root URL (e.g. http://localhost:8080)")
+	showVersion := flag.Bool("version", false, "Print version and exit")
 	flag.Usage = usage
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(version)
+		return
+	}
 
 	args := flag.Args()
 	if len(args) == 0 {
@@ -61,7 +70,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `kt — KarpathyTalk CLI
+	fmt.Fprintf(os.Stderr, `kt — KarpathyTalk CLI (%s)
 
 Usage:
   kt [--host <url>] <command> [flags]
@@ -74,7 +83,8 @@ Commands:
 
 Global Flags:
   --host <url>   API root URL (default: https://karpathytalk.com)
-`)
+  --version      Print version and exit
+`, version)
 }
 
 func runTimeline(c *client.Client, args []string) {
