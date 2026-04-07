@@ -24,6 +24,7 @@ type listQuery struct {
 	mode     string // "timeline" | "user"
 	username string
 	limit    int
+	replies  bool // user mode: true = show replies, false = root posts
 }
 
 // ListModel is the scrollable post list view.
@@ -111,7 +112,7 @@ func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m ListModel) loadMoreCmd() tea.Cmd {
 	switch m.query.mode {
 	case "user":
-		return LoadMoreUserPosts(m.apiClient, m.query.username, m.nextCursor, m.query.limit)
+		return LoadMoreUserPosts(m.apiClient, m.query.username, m.nextCursor, m.query.limit, m.query.replies)
 	default:
 		return LoadTimeline(m.apiClient, m.nextCursor, m.query.limit)
 	}

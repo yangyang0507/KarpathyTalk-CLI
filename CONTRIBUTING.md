@@ -73,7 +73,7 @@ See [`docs/CLI_SPEC.md`](docs/CLI_SPEC.md) for the design philosophy before maki
 
 3. **Make your changes.** A few guidelines:
    - Keep changes focused — one concern per PR.
-   - Follow existing code style; there is no linter config, so match the surrounding code.
+   - Follow existing code style. A `.golangci.yml` config is enforced in CI — run `golangci-lint run` locally before pushing.
    - Do not add dependencies without prior discussion in an issue.
    - Update `CHANGELOG.md` under `[Unreleased]` for any `feat` or `fix` changes.
 
@@ -121,7 +121,7 @@ PR titles are validated automatically against this convention. Commits within a 
 
 1. Push your branch and open a PR against `main`.
 2. Fill in the PR template — summary, type, and testing notes.
-3. Ensure the CI checks pass (`build`, `vet`, PR title validation).
+3. Ensure all CI checks pass: `build`, `vet`, `test`, `lint` (golangci-lint), and PR title validation.
 4. A maintainer will review and may request changes.
 5. Once approved, the PR is squash-merged. The PR title becomes the commit message, so make sure it follows the commit convention above.
 

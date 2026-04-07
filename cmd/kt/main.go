@@ -232,14 +232,25 @@ func runTimeline(c *client.Client, args []string) {
 	asMarkdown := fs.Bool("markdown", false, "Output post content as Markdown")
 	splitArgs(fs, args)
 
-	q := client.PostsQuery{
-		Limit:  *limit,
-		Before: *before,
+	// TUI path: skip fetch, hand all params to the TUI which loads its own data.
+	if !*asJSON && !*asMarkdown && isTTY() {
+		if err := tui.Run(tui.Config{
+			Mode:   "timeline",
+			Limit:  *limit,
+			Before: *before,
+			Client: c,
+		}); err != nil {
+			fatal(err)
+		}
+		return
 	}
-	hasParent := false
-	q.HasParent = &hasParent
 
-	resp, err := c.GetPosts(q)
+	hasParent := false
+	resp, err := c.GetPosts(client.PostsQuery{
+		Limit:     *limit,
+		Before:    *before,
+		HasParent: &hasParent,
+	})
 	if err != nil {
 		fatal(err)
 	}
@@ -253,12 +264,6 @@ func runTimeline(c *client.Client, args []string) {
 			fmt.Println("---")
 		}
 	default:
-		if isTTY() {
-			if err := tui.Run(tui.Config{Mode: "timeline", Limit: *limit, Client: c}); err != nil {
-				fatal(err)
-			}
-			return
-		}
 		for _, p := range resp.Posts {
 			display.PostSummary(p)
 		}
@@ -284,6 +289,7 @@ func runUser(c *client.Client, args []string) {
 	}
 	username := positional[0]
 
+	// Markdown uses a dedicated server endpoint, handle before TTY check.
 	if *asMarkdown {
 		md, err := c.GetUserMarkdown(username)
 		if err != nil {
@@ -293,33 +299,39 @@ func runUser(c *client.Client, args []string) {
 		return
 	}
 
+	// TUI path: skip fetch, hand all params to the TUI which loads its own data.
+	if !*asJSON && isTTY() {
+		if err := tui.Run(tui.Config{
+			Mode:     "user",
+			Username: username,
+			Limit:    *limit,
+			Before:   *before,
+			Replies:  *replies,
+			Client:   c,
+		}); err != nil {
+			fatal(err)
+		}
+		return
+	}
+
 	user, err := c.GetUser(username)
 	if err != nil {
 		fatal(err)
 	}
 
-	q := client.PostsQuery{
-		Author: username,
-		Limit:  *limit,
-		Before: *before,
-	}
 	hasParent := *replies
-	q.HasParent = &hasParent
-
-	resp, err := c.GetPosts(q)
+	resp, err := c.GetPosts(client.PostsQuery{
+		Author:    username,
+		Limit:     *limit,
+		Before:    *before,
+		HasParent: &hasParent,
+	})
 	if err != nil {
 		fatal(err)
 	}
 
 	if *asJSON {
 		display.PrintJSON(map[string]any{"user": user, "posts": resp.Posts, "has_more": resp.HasMore, "next_cursor": resp.NextCursor})
-		return
-	}
-
-	if isTTY() {
-		if err := tui.Run(tui.Config{Mode: "user", Username: username, Limit: *limit, Client: c}); err != nil {
-			fatal(err)
-		}
 		return
 	}
 
@@ -375,33 +387,42 @@ func runPost(c *client.Client, args []string) {
 		return
 	}
 
+	// TUI path: skip fetch, hand all params to the TUI which loads its own data.
+	if !*asJSON && isTTY() {
+		if err := tui.Run(tui.Config{
+			Mode:       "post",
+			PostID:     id,
+			ReplyLimit: *limit,
+			Client:     c,
+		}); err != nil {
+			fatal(err)
+		}
+		return
+	}
+
 	post, err := c.GetPost(id)
 	if err != nil {
 		fatal(err)
 	}
 
 	parentID := post.ID
-	repliesQ := client.PostsQuery{
-		ParentPostID: &parentID,
-		Limit:        *limit,
-	}
 	hasParent := true
-	repliesQ.HasParent = &hasParent
-
-	repliesResp, err := c.GetPosts(repliesQ)
+	repliesResp, err := c.GetPosts(client.PostsQuery{
+		ParentPostID: &parentID,
+		HasParent:    &hasParent,
+		Limit:        *limit,
+	})
 	if err != nil {
 		fatal(err)
 	}
 
 	if *asJSON {
-		display.PrintJSON(map[string]any{"post": post, "replies": repliesResp.Posts})
-		return
-	}
-
-	if isTTY() {
-		if err := tui.Run(tui.Config{Mode: "post", PostID: id, Client: c}); err != nil {
-			fatal(err)
-		}
+		display.PrintJSON(map[string]any{
+			"post":        post,
+			"replies":     repliesResp.Posts,
+			"has_more":    repliesResp.HasMore,
+			"next_cursor": repliesResp.NextCursor,
+		})
 		return
 	}
 

@@ -25,6 +25,12 @@ jobs:
       - name: Test
         run: go test ./...
 
+      - name: Vet
+        run: go vet ./...
+
+      - name: Verify Windows cross-compile
+        run: GOOS=windows GOARCH=amd64 go build ./cmd/kt
+
       - uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"

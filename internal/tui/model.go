@@ -17,11 +17,14 @@ const (
 
 // Config is passed from main to decouple CLI flag parsing from the TUI.
 type Config struct {
-	Mode      string // "timeline" | "user" | "post"
-	Username  string // for "user" mode
-	PostID    int64  // for "post" mode
-	Limit     int
-	Client    *client.Client
+	Mode       string // "timeline" | "user" | "post"
+	Username   string // for "user" mode
+	PostID     int64  // for "post" mode
+	Limit      int
+	Before     int64 // initial pagination cursor (timeline / user)
+	Replies    bool  // user mode: show replies instead of root posts
+	ReplyLimit int   // post mode: max replies to load
+	Client     *client.Client
 }
 
 // AppModel is the root Bubble Tea model.
@@ -37,11 +40,15 @@ type AppModel struct {
 func (m AppModel) Init() tea.Cmd {
 	switch m.cfg.Mode {
 	case "user":
-		return LoadUserPosts(m.cfg.Client, m.cfg.Username, 0, m.cfg.Limit)
+		return LoadUserPosts(m.cfg.Client, m.cfg.Username, m.cfg.Before, m.cfg.Limit, m.cfg.Replies)
 	case "post":
-		return LoadPost(m.cfg.Client, m.cfg.PostID)
+		replyLimit := m.cfg.ReplyLimit
+		if replyLimit <= 0 {
+			replyLimit = 50
+		}
+		return LoadPost(m.cfg.Client, m.cfg.PostID, replyLimit)
 	default: // "timeline"
-		return LoadTimeline(m.cfg.Client, 0, m.cfg.Limit)
+		return LoadTimeline(m.cfg.Client, m.cfg.Before, m.cfg.Limit)
 	}
 }
 
@@ -86,6 +93,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					mode:     m.cfg.Mode,
 					username: m.cfg.Username,
 					limit:    m.cfg.Limit,
+					replies:  m.cfg.Replies,
 				},
 				width:  m.list.width,
 				height: m.list.height,
@@ -114,7 +122,11 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case selectPostMsg:
 		// User pressed Enter on a list item: fetch full post + replies.
 		m.state = viewLoading
-		return m, LoadPost(m.cfg.Client, msg.post.ID)
+		replyLimit := m.cfg.ReplyLimit
+		if replyLimit <= 0 {
+			replyLimit = 50
+		}
+		return m, LoadPost(m.cfg.Client, msg.post.ID, replyLimit)
 
 	case backToListMsg:
 		if m.cfg.Mode == "post" {

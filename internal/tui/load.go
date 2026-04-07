@@ -41,7 +41,8 @@ func LoadTimeline(c *client.Client, before int64, limit int) tea.Cmd {
 }
 
 // LoadUserPosts fetches a user's profile and their posts concurrently.
-func LoadUserPosts(c *client.Client, username string, before int64, limit int) tea.Cmd {
+// replies=true shows the user's replies; replies=false shows their root posts.
+func LoadUserPosts(c *client.Client, username string, before int64, limit int, replies bool) tea.Cmd {
 	return func() tea.Msg {
 		var (
 			user    *client.User
@@ -57,7 +58,7 @@ func LoadUserPosts(c *client.Client, username string, before int64, limit int) t
 		}()
 		go func() {
 			defer wg.Done()
-			hasParent := false
+			hasParent := replies
 			resp, respErr = c.GetPosts(client.PostsQuery{
 				Author:    username,
 				HasParent: &hasParent,
@@ -77,9 +78,9 @@ func LoadUserPosts(c *client.Client, username string, before int64, limit int) t
 }
 
 // LoadMoreUserPosts fetches additional posts for a user (no user profile refetch).
-func LoadMoreUserPosts(c *client.Client, username string, before int64, limit int) tea.Cmd {
+func LoadMoreUserPosts(c *client.Client, username string, before int64, limit int, replies bool) tea.Cmd {
 	return func() tea.Msg {
-		hasParent := false
+		hasParent := replies
 		resp, err := c.GetPosts(client.PostsQuery{
 			Author:    username,
 			HasParent: &hasParent,
@@ -94,7 +95,7 @@ func LoadMoreUserPosts(c *client.Client, username string, before int64, limit in
 }
 
 // LoadPost fetches a single post and its direct replies concurrently.
-func LoadPost(c *client.Client, id int64) tea.Cmd {
+func LoadPost(c *client.Client, id int64, replyLimit int) tea.Cmd {
 	return func() tea.Msg {
 		var (
 			post    *client.Post
@@ -114,7 +115,7 @@ func LoadPost(c *client.Client, id int64) tea.Cmd {
 			resp, err := c.GetPosts(client.PostsQuery{
 				ParentPostID: &id,
 				HasParent:    &hasParent,
-				Limit:        50,
+				Limit:        replyLimit,
 			})
 			if err != nil {
 				repErr = err
