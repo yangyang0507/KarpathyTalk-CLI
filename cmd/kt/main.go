@@ -19,6 +19,14 @@ func isTTY() bool {
 	return term.IsTerminal(int(os.Stdout.Fd()))
 }
 
+func terminalWidth() int {
+	w, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil || w <= 0 {
+		return 80
+	}
+	return w
+}
+
 // splitArgs separates positional arguments from flag arguments.
 // This allows "kt post 5 --markdown" and "kt post --markdown 5" to both work.
 func splitArgs(args []string) (positional []string, flags []string) {
@@ -386,6 +394,10 @@ func runDocs(c *client.Client) {
 	docs, err := c.GetDocs()
 	if err != nil {
 		fatal(err)
+	}
+	if isTTY() {
+		fmt.Print(display.RenderMarkdownWidth(docs, terminalWidth()))
+		return
 	}
 	display.PrintMarkdown(docs)
 }
