@@ -1,0 +1,3 @@
+[submodule "refs/KarpathyTalk"]
+	path = refs/KarpathyTalk
+	url = https://github.com/karpathy/KarpathyTalk.git

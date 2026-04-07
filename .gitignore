@@ -1,0 +1,27 @@
+# Binary
+kt
+dist/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/vendor/
+
+# Build cache
+/tmp/
+
+# Environment
+.env
+.env.local
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
