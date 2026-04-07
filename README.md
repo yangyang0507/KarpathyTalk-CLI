@@ -12,12 +12,18 @@ A read-only command-line client for [KarpathyTalk](https://karpathytalk.com), An
 
 ## Installation
 
-**Download a pre-built binary** from the [releases page](https://github.com/dy/KarpathyTalk-CLI/releases), then place it somewhere on your `$PATH`.
+**One-line install** (macOS / Linux):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yangyang0507/KarpathyTalk-CLI/main/install.sh | sh
+```
+
+The script detects your OS and architecture, downloads the correct binary from the [latest release](https://github.com/yangyang0507/KarpathyTalk-CLI/releases/latest), and installs it to `/usr/local/bin` (or `~/.local/bin` if write permission is unavailable).
 
 **Or build from source** (requires Go 1.21+):
 
 ```bash
-git clone https://github.com/dy/KarpathyTalk-CLI.git
+git clone https://github.com/yangyang0507/KarpathyTalk-CLI.git
 cd KarpathyTalk-CLI
 
 make build          # → dist/kt  (current platform)

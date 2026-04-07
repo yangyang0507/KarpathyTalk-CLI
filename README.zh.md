@@ -12,12 +12,18 @@
 
 ## 安装
 
-从 [releases 页面](https://github.com/dy/KarpathyTalk-CLI/releases) 下载对应平台的预编译二进制文件，放入 `$PATH` 即可使用。
+**一键安装**（macOS / Linux）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yangyang0507/KarpathyTalk-CLI/main/install.sh | sh
+```
+
+脚本会自动检测系统和架构，从[最新 release](https://github.com/yangyang0507/KarpathyTalk-CLI/releases/latest) 下载对应的二进制文件，安装到 `/usr/local/bin`（无写权限时回退到 `~/.local/bin`）。
 
 **或从源码构建**（需要 Go 1.21+）：
 
 ```bash
-git clone https://github.com/dy/KarpathyTalk-CLI.git
+git clone https://github.com/yangyang0507/KarpathyTalk-CLI.git
 cd KarpathyTalk-CLI
 
 make build          # → dist/kt  （当前平台）

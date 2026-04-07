@@ -52,6 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `internal/display` package — three output channels (human, JSON, Markdown)
 - CLI specification document (`CLI_SPEC.md`) covering design philosophy and API mapping
 
-[Unreleased]: https://github.com/dy/KarpathyTalk-CLI/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/dy/KarpathyTalk-CLI/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/dy/KarpathyTalk-CLI/releases/tag/v0.1.0
+[Unreleased]: https://github.com/yangyang0507/KarpathyTalk-CLI/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/yangyang0507/KarpathyTalk-CLI/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/yangyang0507/KarpathyTalk-CLI/releases/tag/v0.1.0
