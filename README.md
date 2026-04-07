@@ -11,9 +11,9 @@ A read-only command-line client for [KarpathyTalk](https://karpathytalk.com), An
     <th align="center">Post</th>
   </tr>
   <tr>
-    <td><img src="docs/resources/timeline.png" alt="Timeline view" /></td>
-    <td><img src="docs/resources/user.png" alt="User profile view" /></td>
-    <td><img src="docs/resources/post.png" alt="Post detail view" /></td>
+    <td><img src="docs/resources/timeline.png" alt="Timeline view" height="400" /></td>
+    <td><img src="docs/resources/user.png" alt="User profile view" height="400" /></td>
+    <td><img src="docs/resources/post.png" alt="Post detail view" height="400" /></td>
   </tr>
 </table>
 
