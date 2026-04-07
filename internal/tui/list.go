@@ -7,13 +7,13 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"kt/internal/client"
-	"kt/internal/display"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/client"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/display"
 )
 
 // cardHeight is the number of terminal lines each post card occupies.
-// header line + 2 preview lines + separator line = 4.
-const cardHeight = 4
+// header line + 2 preview lines + separator line + inter-card newline = 5.
+const cardHeight = 5
 
 // internal message types
 type selectPostMsg struct{ post client.Post }

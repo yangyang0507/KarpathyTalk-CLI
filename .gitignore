@@ -24,3 +24,8 @@ dist/
 .vscode/
 *.swp
 *.swo
+
+# AI
+.claude/
+.codex/
+.pi/

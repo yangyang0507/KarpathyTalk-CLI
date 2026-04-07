@@ -6,8 +6,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"kt/internal/client"
-	"kt/internal/display"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/client"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/display"
 )
 
 // DetailModel shows a single post with replies in a scrollable viewport.

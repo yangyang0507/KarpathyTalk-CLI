@@ -125,8 +125,27 @@ func (c *Client) PostURL(id int64) string {
 	return fmt.Sprintf("%s/posts/%d", c.Host, id)
 }
 
+// userAgent is sent with every request so the server can identify the client.
+var userAgent = "kt/" + "dev" // overridden at link time via -ldflags
+
+// SetVersion updates the User-Agent string. Called from main after version is set.
+func SetVersion(v string) { userAgent = "kt/" + v }
+
+func (c *Client) newRequest(path string) (*http.Request, error) {
+	req, err := http.NewRequest(http.MethodGet, c.Host+path, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", userAgent)
+	return req, nil
+}
+
 func (c *Client) getJSON(path string, out any) error {
-	resp, err := c.HTTPClient.Get(c.Host + path)
+	req, err := c.newRequest(path)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
@@ -142,7 +161,11 @@ func (c *Client) getJSON(path string, out any) error {
 }
 
 func (c *Client) getText(path string) (string, error) {
-	resp, err := c.HTTPClient.Get(c.Host + path)
+	req, err := c.newRequest(path)
+	if err != nil {
+		return "", fmt.Errorf("request failed: %w", err)
+	}
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("request failed: %w", err)
 	}

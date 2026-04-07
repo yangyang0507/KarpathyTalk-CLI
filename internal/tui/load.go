@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"kt/internal/client"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/client"
 )
 
 // PostsLoadedMsg is sent when a list of posts is fetched.

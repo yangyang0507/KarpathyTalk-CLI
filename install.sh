@@ -76,22 +76,29 @@ main() {
   VERSION=$(latest_version)
   [ -n "$VERSION" ] || err "Could not determine latest release. Check your internet connection or visit https://github.com/${REPO}/releases"
 
-  FILENAME="${BINARY}-${OS}-${ARCH}"
+  FILENAME="${BINARY}-${OS}-${ARCH}.tar.gz"
   URL="https://github.com/${REPO}/releases/download/${VERSION}/${FILENAME}"
 
   info "Downloading ${BINARY} ${VERSION} (${OS}/${ARCH})…"
-  TMP=$(mktemp)
-  curl -fsSL "$URL" -o "$TMP" || err "Download failed. Release asset not found:\n    ${URL}"
-  chmod +x "$TMP"
+  TMP_DIR=$(mktemp -d)
+  TMP_ARCHIVE="${TMP_DIR}/${FILENAME}"
+  trap 'rm -rf "$TMP_DIR"' EXIT
+
+  curl -fsSL "$URL" -o "$TMP_ARCHIVE" || err "Download failed. Release asset not found:\n    ${URL}"
+
+  tar -xzf "$TMP_ARCHIVE" -C "$TMP_DIR"
+  TMP_BIN="${TMP_DIR}/${BINARY}"
+  [ -f "$TMP_BIN" ] || err "Could not find binary '${BINARY}' inside archive"
+  chmod +x "$TMP_BIN"
 
   INSTALL_DIR=$(resolve_install_dir)
   DEST="${INSTALL_DIR}/${BINARY}"
 
   if [ -w "$INSTALL_DIR" ]; then
-    mv "$TMP" "$DEST"
+    mv "$TMP_BIN" "$DEST"
   else
     info "Installing to ${INSTALL_DIR} (sudo required)…"
-    sudo mv "$TMP" "$DEST"
+    sudo mv "$TMP_BIN" "$DEST"
   fi
 
   ok "${BINARY} ${VERSION} installed → ${DEST}"

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"kt/internal/client"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/client"
 )
 
 var (

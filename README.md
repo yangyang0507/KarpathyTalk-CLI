@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/yangyang0507/KarpathyTalk-CLI/main/
 
 The script detects your OS and architecture, downloads the correct binary from the [latest release](https://github.com/yangyang0507/KarpathyTalk-CLI/releases/latest), and installs it to `/usr/local/bin` (or `~/.local/bin` if write permission is unavailable).
 
-**Or build from source** (requires Go 1.21+):
+**Or build from source** (requires Go 1.26.1+):
 
 ```bash
 git clone https://github.com/yangyang0507/KarpathyTalk-CLI.git
@@ -35,6 +35,15 @@ make release        # → dist/kt-<os>-<arch> for all platforms
 
 ```
 kt [--host <url>] <command> [flags]
+```
+
+Get help at any level:
+
+```bash
+kt help                  # list all commands
+kt help timeline         # flags and examples for a specific command
+kt timeline --help       # same as above
+kt --version             # print installed version
 ```
 
 ### Commands

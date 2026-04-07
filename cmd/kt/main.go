@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"golang.org/x/term"
-	"kt/internal/client"
-	"kt/internal/display"
-	"kt/internal/tui"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/client"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/display"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/tui"
 )
 
 // version is set at build time via -ldflags "-X main.version=<tag>".
@@ -27,16 +28,42 @@ func terminalWidth() int {
 	return w
 }
 
-// splitArgs separates positional arguments from flag arguments.
-// This allows "kt post 5 --markdown" and "kt post --markdown 5" to both work.
-func splitArgs(args []string) (positional []string, flags []string) {
-	for _, a := range args {
-		if len(a) > 0 && a[0] == '-' {
-			flags = append(flags, a)
-		} else {
+// boolFlagger is satisfied by flag.BoolVar values, which consume no next argument.
+type boolFlagger interface{ IsBoolFlag() bool }
+
+// splitArgs separates args into positional arguments and parses flags into fs.
+// It correctly keeps flag-value pairs together, supporting any argument order:
+// both "kt post 5 --markdown" and "kt post --markdown 5" work as expected.
+func splitArgs(fs *flag.FlagSet, args []string) (positional []string) {
+	var flagArgs []string
+	i := 0
+	for i < len(args) {
+		a := args[i]
+		if len(a) == 0 || a[0] != '-' {
 			positional = append(positional, a)
+			i++
+			continue
 		}
+		flagArgs = append(flagArgs, a)
+		name := strings.TrimLeft(a, "-")
+		if strings.ContainsRune(name, '=') {
+			// --flag=value form: value already embedded, no look-ahead needed.
+			i++
+			continue
+		}
+		// Look up whether this flag accepts a value argument.
+		if f := fs.Lookup(name); f != nil {
+			bf, ok := f.Value.(boolFlagger)
+			isBool := ok && bf.IsBoolFlag()
+			if !isBool && i+1 < len(args) && len(args[i+1]) > 0 && args[i+1][0] != '-' {
+				flagArgs = append(flagArgs, args[i+1])
+				i += 2
+				continue
+			}
+		}
+		i++
 	}
+	fs.Parse(flagArgs) //nolint:errcheck // ExitOnError mode exits on parse failure
 	return
 }
 
@@ -51,6 +78,7 @@ func main() {
 		fmt.Println(version)
 		return
 	}
+	client.SetVersion(version)
 
 	args := flag.Args()
 	if len(args) == 0 {
@@ -202,8 +230,7 @@ func runTimeline(c *client.Client, args []string) {
 	before := fs.Int64("before", 0, "Pagination cursor: load posts older than this ID")
 	asJSON := fs.Bool("json", false, "Output raw JSON")
 	asMarkdown := fs.Bool("markdown", false, "Output post content as Markdown")
-	_, flags := splitArgs(args)
-	fs.Parse(flags)
+	splitArgs(fs, args)
 
 	q := client.PostsQuery{
 		Limit:  *limit,
@@ -249,8 +276,7 @@ func runUser(c *client.Client, args []string) {
 	before := fs.Int64("before", 0, "Pagination cursor")
 	asJSON := fs.Bool("json", false, "Output raw JSON")
 	asMarkdown := fs.Bool("markdown", false, "Output user profile Markdown with YAML frontmatter")
-	positional, flags := splitArgs(args)
-	fs.Parse(flags)
+	positional := splitArgs(fs, args)
 
 	if len(positional) < 1 {
 		usageUser()
@@ -314,8 +340,7 @@ func runPost(c *client.Client, args []string) {
 	asMarkdown := fs.Bool("markdown", false, "Post Markdown with YAML frontmatter")
 	asRaw := fs.Bool("raw", false, "Raw post Markdown, no frontmatter")
 	revision := fs.Int("revision", 0, "View a specific revision (use with --markdown or --raw)")
-	positional, flags := splitArgs(args)
-	fs.Parse(flags)
+	positional := splitArgs(fs, args)
 
 	if len(positional) < 1 {
 		usagePost()
@@ -325,6 +350,11 @@ func runPost(c *client.Client, args []string) {
 	if err != nil || id < 1 {
 		fmt.Fprintln(os.Stderr, "kt post: invalid post ID")
 		usagePost()
+		os.Exit(1)
+	}
+
+	if *revision > 0 && !*asMarkdown && !*asRaw {
+		fmt.Fprintln(os.Stderr, "kt post: --revision only applies with --markdown or --raw")
 		os.Exit(1)
 	}
 
@@ -382,6 +412,9 @@ func runPost(c *client.Client, args []string) {
 			fmt.Println("y ──")
 		} else {
 			fmt.Println("ies ──")
+		}
+		if repliesResp.HasMore {
+			fmt.Printf("   (showing %d of more — use --limit to fetch more)\n", len(repliesResp.Posts))
 		}
 		fmt.Println()
 		for _, r := range repliesResp.Posts {

@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/yangyang0507/KarpathyTalk-CLI/main/
 
 脚本会自动检测系统和架构，从[最新 release](https://github.com/yangyang0507/KarpathyTalk-CLI/releases/latest) 下载对应的二进制文件，安装到 `/usr/local/bin`（无写权限时回退到 `~/.local/bin`）。
 
-**或从源码构建**（需要 Go 1.21+）：
+**或从源码构建**（需要 Go 1.26.1+）：
 
 ```bash
 git clone https://github.com/yangyang0507/KarpathyTalk-CLI.git
@@ -35,6 +35,15 @@ make release        # → dist/kt-<os>-<arch>（全平台交叉编译）
 
 ```
 kt [--host <url>] <命令> [参数]
+```
+
+分级查看帮助：
+
+```bash
+kt help                  # 列出所有命令
+kt help timeline         # 查看某个命令的参数和示例
+kt timeline --help       # 效果同上
+kt --version             # 打印当前版本
 ```
 
 ### 命令

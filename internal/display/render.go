@@ -51,8 +51,3 @@ func RenderMarkdownWidth(text string, width int) string {
 	return out
 }
 
-// renderMarkdown renders Markdown text to ANSI terminal output.
-// Falls back to plain text if rendering fails.
-func renderMarkdown(text string) string {
-	return RenderMarkdownWidth(text, termWidth()-4)
-}

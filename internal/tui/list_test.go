@@ -1,6 +1,9 @@
 package tui
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // ── stripMarkdownSyntax ───────────────────────────────────────────────────────
 
@@ -53,7 +56,7 @@ func TestStripMarkdownSyntax_Links(t *testing.T) {
 func TestStripMarkdownSyntax_CodeBlock(t *testing.T) {
 	input := "intro\n```go\nfmt.Println(\"hello\")\n```\noutro"
 	got := stripMarkdownSyntax(input)
-	if contains(got, "fmt.Println") {
+	if strings.Contains(got, "fmt.Println") {
 		t.Errorf("code block content should be stripped, got: %q", got)
 	}
 }
@@ -125,14 +128,3 @@ func TestCardPreview_Empty(t *testing.T) {
 	}
 }
 
-func contains(s, sub string) bool {
-	return len(s) >= len(sub) && (s == sub || len(sub) == 0 ||
-		func() bool {
-			for i := 0; i <= len(s)-len(sub); i++ {
-				if s[i:i+len(sub)] == sub {
-					return true
-				}
-			}
-			return false
-		}())
-}

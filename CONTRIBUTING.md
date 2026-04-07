@@ -13,7 +13,7 @@ Thank you for your interest in contributing! This document covers everything you
 
 ## Development Setup
 
-**Prerequisites:** Go 1.21 or later.
+**Prerequisites:** Go 1.26.1 or later.
 
 ```bash
 # 1. Fork the repo on GitHub, then clone your fork
@@ -82,6 +82,7 @@ See [`docs/CLI_SPEC.md`](docs/CLI_SPEC.md) for the design philosophy before maki
    ```bash
    go build ./...
    go vet ./...
+   go test ./...
    make build
    ```
 

@@ -2,8 +2,8 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"kt/internal/client"
-	"kt/internal/display"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/client"
+	"github.com/yangyang0507/KarpathyTalk-CLI/internal/display"
 )
 
 type viewState int
@@ -31,6 +31,7 @@ type AppModel struct {
 	detail     DetailModel
 	cfg        Config
 	errMsg     string
+	cachedUser *client.User // stored for user-mode header re-render on resize
 }
 
 func (m AppModel) Init() tea.Cmd {
@@ -57,6 +58,10 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case viewList:
 			updated, cmd := m.list.Update(msg)
 			m.list = updated.(ListModel)
+			// Re-render user profile box at the new terminal width.
+			if m.cfg.Mode == "user" && m.list.userHeader != "" && m.cachedUser != nil {
+				m.list.userHeader = display.RenderUserProfile(*m.cachedUser, msg.Width)
+			}
 			return m, cmd
 		case viewDetail:
 			updated, cmd := m.detail.Update(msg)
@@ -86,6 +91,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				height: m.list.height,
 			}
 			if msg.User != nil {
+				m.cachedUser = msg.User
 				m.list.userHeader = display.RenderUserProfile(*msg.User, m.list.width)
 			}
 			m.state = viewList
