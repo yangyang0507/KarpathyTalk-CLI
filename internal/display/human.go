@@ -174,7 +174,11 @@ func Pagination(nextCursor int64) {
 
 // timeAgo returns a short human-readable relative time string.
 func timeAgo(t time.Time) string {
-	d := time.Since(t)
+	return timeAgoFrom(t, time.Now())
+}
+
+func timeAgoFrom(t, now time.Time) string {
+	d := now.Sub(t)
 	switch {
 	case d < time.Minute:
 		return "just now"

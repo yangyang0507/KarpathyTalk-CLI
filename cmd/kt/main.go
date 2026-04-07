@@ -323,7 +323,7 @@ func runPost(c *client.Client, args []string) {
 	}
 	id, err := strconv.ParseInt(positional[0], 10, 64)
 	if err != nil || id < 1 {
-		fmt.Fprintln(os.Stderr, "kt post: invalid post ID\n")
+		fmt.Fprintln(os.Stderr, "kt post: invalid post ID")
 		usagePost()
 		os.Exit(1)
 	}
