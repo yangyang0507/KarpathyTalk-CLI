@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-07
+
+### Added
+- Progressive help system: `kt help`, `kt help <command>`, and `kt <command> --help` all show command-specific flags and examples
+- `--version` flag prints the installed version
+- `kt docs` renders Markdown through Glamour when running in a terminal (TTY)
+- Reply pagination hint in non-TTY mode when `HasMore` is true
+- Unit tests for `internal/client`, `internal/display`, `internal/tui`, and `cmd/kt`
+- Regression tests for TUI flag passthrough and `post --json` pagination fields
+- Makefile with `build`, `install`, `release`, `clean` targets
+- `install.sh` one-line installer for macOS / Linux
+- GoReleaser config (`.goreleaser.yaml`) for cross-platform release builds
+- GitHub Actions: CI workflow (build / vet / test on Ubuntu + macOS), release workflow, PR check workflow
+- PR template, bug report and feature request issue templates
+- `docs/RELEASE.md` release process documentation
+- `CONTRIBUTING.md` contributor guide
+- MIT License
+- Screenshots in README (timeline, user, post views)
+
+### Changed
+- Module path renamed from `kt` to `github.com/yangyang0507/KarpathyTalk-CLI`
+- `splitArgs` rewritten to accept a `*flag.FlagSet` and correctly keep flag-value pairs together — fixes `--limit 50`, `--before 230`, etc. being silently ignored
+- TUI now respects all CLI flags: `--before`, `--limit`, `--replies`, and `--limit` (for replies) are passed through to `tui.Config` instead of using defaults
+- TTY branch moved before the HTTP fetch in all `run*` functions — eliminates the wasted API call that was discarded anyway
+- `kt post --json` output now includes `has_more` and `next_cursor` for replies
+- HTTP client sends a `User-Agent: kt/<version>` header with every request
+- `go mod tidy` run — all direct dependencies now correctly marked as direct
+- `--revision` flag in `kt post` now exits with an error if used without `--markdown` or `--raw`
+- `docs/CLI_SPEC.md` updated to reflect current directory structure and dependencies
+- CI: added macOS runner, `go mod tidy` diff check, and Windows cross-compile verification in release workflow
+
+### Fixed
+- `splitArgs` broke every value-taking flag (`--limit`, `--before`, `--revision`) — values were classified as positional arguments and never parsed
+- `install.sh` downloaded a bare binary URL that never existed; now correctly downloads and extracts the `.tar.gz` archive produced by GoReleaser
+- `cardHeight` was `4` but each card occupies 5 terminal lines, causing the visible-card count to be off by ~25%
+- User profile box in TUI user mode was not re-rendered on terminal resize
+- `kt docs` showed raw Markdown in TTY instead of rendered output
+- `.gitignore` rule `kt` matched `cmd/kt/` — renamed to `/kt` to scope it to the repo root
+
+### Dependencies
+- Module path: `kt` → `github.com/yangyang0507/KarpathyTalk-CLI`
+
 ## [0.2.0] - 2026-04-07
 
 ### Added
@@ -52,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `internal/display` package — three output channels (human, JSON, Markdown)
 - CLI specification document (`CLI_SPEC.md`) covering design philosophy and API mapping
 
-[Unreleased]: https://github.com/yangyang0507/KarpathyTalk-CLI/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/yangyang0507/KarpathyTalk-CLI/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/yangyang0507/KarpathyTalk-CLI/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/yangyang0507/KarpathyTalk-CLI/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/yangyang0507/KarpathyTalk-CLI/releases/tag/v0.1.0
