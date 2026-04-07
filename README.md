@@ -2,6 +2,21 @@
 
 A read-only command-line client for [KarpathyTalk](https://karpathytalk.com), Andrej Karpathy's social platform. Browse the timeline, read posts, and explore user profiles — all from your terminal.
 
+## Screenshots
+
+<table>
+  <tr>
+    <th align="center">Timeline</th>
+    <th align="center">User</th>
+    <th align="center">Post</th>
+  </tr>
+  <tr>
+    <td><img src="docs/resrouces/timeline.png" alt="Timeline view" /></td>
+    <td><img src="docs/resrouces/user.png" alt="User profile view" /></td>
+    <td><img src="docs/resrouces/post.png" alt="Post detail view" /></td>
+  </tr>
+</table>
+
 ## Features
 
 - **Interactive TUI** — Navigate posts with keyboard shortcuts when running in a terminal
