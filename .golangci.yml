@@ -1,32 +1,27 @@
-version: "2"
-
 run:
-  # Pin the Go version golangci-lint uses for analysis.
-  # golangci-lint refuses to run if go.mod's version exceeds the version it
-  # was built with. Setting this explicitly avoids that check.
+  # Pin the Go version used for analysis.
+  # golangci-lint v1.x refuses to run if go.mod's version exceeds the version
+  # it was built with; setting this explicitly bypasses that check.
   go: "1.24"
 
 linters:
-  default: none
+  disable-all: true
   enable:
-    - errcheck      # unhandled errors
-    - gosimple      # simplification suggestions
-    - govet         # suspicious constructs
-    - ineffassign   # ineffectual assignments
-    - staticcheck   # static analysis
-    - unused        # unused code
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
 
 linters-settings:
   errcheck:
-    # Ignore error returns from fmt.Fprint* and flag.Parse (ExitOnError mode)
     exclude-functions:
       - fmt.Fprint
       - fmt.Fprintf
       - fmt.Fprintln
-      - (github.com/charmbracelet/bubbletea.Program).Run
 
 issues:
   exclude-rules:
-    # Test files can use t.Error without checking returns
     - path: "_test\\.go"
       linters: [errcheck]
