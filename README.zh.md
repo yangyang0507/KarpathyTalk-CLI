@@ -12,18 +12,17 @@
 
 ## 安装
 
-需要 Go 1.21 或更高版本。
+从 [releases 页面](https://github.com/dy/KarpathyTalk-CLI/releases) 下载对应平台的预编译二进制文件，放入 `$PATH` 即可使用。
+
+**或从源码构建**（需要 Go 1.21+）：
 
 ```bash
-go install kt/cmd/kt
-```
-
-或从源码构建：
-
-```bash
-git clone <repo>
+git clone https://github.com/dy/KarpathyTalk-CLI.git
 cd KarpathyTalk-CLI
-go build -o kt ./cmd/kt
+
+make build          # → dist/kt  （当前平台）
+make install        # → $GOPATH/bin/kt
+make release        # → dist/kt-<os>-<arch>（全平台交叉编译）
 ```
 
 ## 使用方法

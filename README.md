@@ -12,18 +12,17 @@ A read-only command-line client for [KarpathyTalk](https://karpathytalk.com), An
 
 ## Installation
 
-Requires Go 1.21 or later.
+**Download a pre-built binary** from the [releases page](https://github.com/dy/KarpathyTalk-CLI/releases), then place it somewhere on your `$PATH`.
+
+**Or build from source** (requires Go 1.21+):
 
 ```bash
-go install kt/cmd/kt
-```
-
-Or build from source:
-
-```bash
-git clone <repo>
+git clone https://github.com/dy/KarpathyTalk-CLI.git
 cd KarpathyTalk-CLI
-go build -o kt ./cmd/kt
+
+make build          # → dist/kt  (current platform)
+make install        # → $GOPATH/bin/kt
+make release        # → dist/kt-<os>-<arch> for all platforms
 ```
 
 ## Usage
