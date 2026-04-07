@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/term"
 	"github.com/yangyang0507/KarpathyTalk-CLI/internal/client"
 	"github.com/yangyang0507/KarpathyTalk-CLI/internal/display"
 	"github.com/yangyang0507/KarpathyTalk-CLI/internal/tui"
+	"golang.org/x/term"
 )
 
 // version is set at build time via -ldflags "-X main.version=<tag>".
@@ -417,12 +417,7 @@ func runPost(c *client.Client, args []string) {
 	}
 
 	if *asJSON {
-		display.PrintJSON(map[string]any{
-			"post":        post,
-			"replies":     repliesResp.Posts,
-			"has_more":    repliesResp.HasMore,
-			"next_cursor": repliesResp.NextCursor,
-		})
+		display.PrintJSON(postJSONOutput(post, repliesResp))
 		return
 	}
 
@@ -441,6 +436,15 @@ func runPost(c *client.Client, args []string) {
 		for _, r := range repliesResp.Posts {
 			display.PostSummary(r)
 		}
+	}
+}
+
+func postJSONOutput(post *client.Post, repliesResp *client.PostsResponse) map[string]any {
+	return map[string]any{
+		"post":        post,
+		"replies":     repliesResp.Posts,
+		"has_more":    repliesResp.HasMore,
+		"next_cursor": repliesResp.NextCursor,
 	}
 }
 
