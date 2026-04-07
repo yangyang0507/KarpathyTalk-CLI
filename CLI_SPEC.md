@@ -69,22 +69,35 @@ Flags:
   --limit <n>      每页条数，默认 20
   --before <id>    分页游标
   --json           输出原始 JSON
-  --markdown       输出 Markdown 原文
+  --markdown       输出用户资料 Markdown（含 YAML frontmatter，调用 /user/<u>/md）
 ```
 
 ---
 
 #### `kt post <id>`
 
-查看单篇帖子详情及其所有回复。
+查看单篇帖子详情及其直接回复（两次 API 调用：帖子本身 + 直接回复列表）。
+
+> 服务端目前未注册 `/api/posts/{id}/thread` 端点，嵌套回复需额外递归请求，
+> 当前版本仅展示第一层直接回复。
 
 ```
 kt post <id> [flags]
 
 Flags:
+  --limit <n>      回复每页条数，默认 20
   --json           输出原始 JSON
-  --markdown       输出帖子 Markdown 原文（含 frontmatter）
-  --raw            输出帖子纯 Markdown 正文（无 frontmatter）
+  --markdown       输出帖子 Markdown 原文（含 frontmatter，调用 /posts/<id>/md）
+  --raw            输出帖子纯 Markdown 正文（无 frontmatter，调用 /posts/<id>/raw）
+  --revision <n>   查看指定修订版本（配合 --markdown / --raw 使用）
+```
+
+#### `kt docs`
+
+获取平台 API 文档的 Markdown 原文，便于 LLM Agent 了解平台能力。
+
+```
+kt docs
 ```
 
 ---
@@ -136,15 +149,19 @@ Flags:
 
 ## API 映射
 
-| 命令 | API 端点 |
-|---|---|
-| `kt timeline` | `GET /api/posts?has_parent=false` |
-| `kt user <u>` | `GET /api/users/<u>` + `GET /api/posts?author=<u>` |
-| `kt user <u> --replies` | `GET /api/posts?author=<u>&has_parent=true` |
-| `kt post <id>` | `GET /api/posts/<id>` + `GET /api/posts?parent_post_id=<id>` |
-| `kt post <id> --markdown` | `GET /posts/<id>/md` |
-| `kt post <id> --raw` | `GET /posts/<id>/raw` |
-| `kt export <u>` | 遍历 `GET /api/posts?author=<u>` + 分页 `before` |
+服务端实际已注册的公开只读端点（`app.go` 路由表）：
+
+| 命令 | API 端点 | 备注 |
+|---|---|---|
+| `kt timeline` | `GET /api/posts?has_parent=false` | `limit` / `before` 参数均支持 |
+| `kt user <u>` | `GET /api/users/<u>` + `GET /api/posts?author=<u>&has_parent=false` | 两次调用；`has_parent=false` 过滤掉回复 |
+| `kt user <u> --replies` | `GET /api/posts?author=<u>&has_parent=true` | |
+| `kt user <u> --markdown` | `GET /user/<u>/md` | 返回含 YAML frontmatter 的用户资料 Markdown |
+| `kt post <id>` | `GET /api/posts/<id>` + `GET /api/posts?parent_post_id=<id>` | 仅直接回复；`/api/posts/{id}/thread` 未注册 |
+| `kt post <id> --markdown` | `GET /posts/<id>/md` | 支持 `?revision=N` |
+| `kt post <id> --raw` | `GET /posts/<id>/raw` | 支持 `?revision=N` |
+| `kt docs` | `GET /docs.md` | |
+| `kt export <u>` | 遍历 `GET /api/posts?author=<u>&has_parent=false` + 逐条 `GET /posts/<id>/md` | |
 
 ---
 
@@ -153,13 +170,19 @@ Flags:
 直接对应服务端 `internal/app/api.go` 的 JSON 响应，主要结构：
 
 ```go
-type User struct { ... }          // 对应 apiUser
-type UserRef struct { ... }       // 对应 apiUserRef
+type User struct { ... }          // 对应 apiUser（GET /api/users/{username}）
+type UserRef struct { ... }       // 对应 apiUserRef（嵌入在 Post 中）
 type Post struct { ... }          // 对应 apiPost
-type PostsResponse struct { ... } // 对应 apiPostsQueryResponse
-type PostResponse struct { ... }  // 对应 apiPostResponse
-type ThreadResponse struct { ... } // 对应 apiPostThreadResponse
+type PostsResponse struct { ... } // 对应 apiPostsQueryResponse（GET /api/posts，无 User 字段）
+type PostResponse struct { ... }  // 对应 apiPostResponse（GET /api/posts/{id}）
 ```
+
+> **注意**：服务端的 `apiPostThreadResponse`（含 `Post` + `Replies` 的一体结构）
+> 对应的路由 `/api/posts/{id}/thread` **尚未注册**，客户端不应依赖该结构；
+> `kt post` 通过两次独立请求自行组合帖子与回复数据。
+>
+> 同理，`apiPostListResponse`（含嵌套 User 字段的帖子列表）来自未注册的
+> `/api/users/{username}/posts` 端点，也不需要在 types.go 中声明。
 
 ---
 
@@ -168,7 +191,7 @@ type ThreadResponse struct { ... } // 对应 apiPostThreadResponse
 1. `internal/client` — API 封装层（先写，先测）
 2. `internal/display` — 格式化输出层
 3. `cmd/kt/main.go` — 命令入口，组装以上两层
-4. 第一期三个命令：`timeline` → `user` → `post`
+4. 第一期四个命令：`timeline` → `user` → `post` → `docs`
 5. 第二期功能按需迭代
 
 ---
