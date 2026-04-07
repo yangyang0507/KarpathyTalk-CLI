@@ -1,5 +1,11 @@
 version: "2"
 
+run:
+  # Pin the Go version golangci-lint uses for analysis.
+  # golangci-lint refuses to run if go.mod's version exceeds the version it
+  # was built with. Setting this explicitly avoids that check.
+  go: "1.24"
+
 linters:
   default: none
   enable:
@@ -13,7 +19,11 @@ linters:
 linters-settings:
   errcheck:
     # Ignore error returns from fmt.Fprint* and flag.Parse (ExitOnError mode)
-    ignore: "fmt:.*,github.com/charmbracelet/bubbletea:.*"
+    exclude-functions:
+      - fmt.Fprint
+      - fmt.Fprintf
+      - fmt.Fprintln
+      - (github.com/charmbracelet/bubbletea.Program).Run
 
 issues:
   exclude-rules:
