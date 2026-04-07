@@ -1,5 +1,64 @@
 # kt — KarpathyTalk CLI 开发说明
 
+## 设计哲学
+
+以下哲学源自 KarpathyTalk 服务端，**CLI 必须完全遵循**。
+
+### 1. 一切皆帖子
+
+数据模型只有两个实体：**User** 和 **Post**。其余的全是派生：
+
+- 回复 = 有 `parent_post_id` 的帖子
+- 引用 = 有 `quote_of_id` 的帖子
+- 时间线 = 对 `/api/posts` 的一次查询
+- 用户主页 = 对 `/api/posts?author=<u>` 的一次查询
+
+CLI 的命令设计反映这个模型：`timeline`、`user`、`post` 都是对同一集合的不同过滤视角，而非独立的对象系统。
+
+### 2. 一个集合接口，正交的过滤器
+
+服务端只有一个列表端点 `/api/posts`，通过正交的 query 参数组合覆盖所有场景：
+
+```
+author=<u>  has_parent=true|false  parent_post_id=<id>  before=<id>  limit=<n>
+```
+
+CLI **不应该为每个场景造新的抽象**，直接映射到这套过滤语言。
+
+### 3. 两种读取模式：JSON 给代码，Markdown 给人和 Agent
+
+服务端明确区分两种输出：
+- **JSON**：结构化字段、分页、关系，供程序消费
+- **Markdown**（含 YAML frontmatter）：可直接阅读的文档，供人类和 LLM Agent 消费
+
+CLI 的 `--json` / `--markdown` flag 直接对应这两种模式，**不是可选的装饰**，而是核心设计。默认的 human 输出是第三种——终端友好的摘要视图。
+
+### 4. 读开放，写人工
+
+平台没有公开写 API，CLI 因此也是**纯只读工具**。认证、写操作、Bot 发帖均不在范围内，不应为此留扩展口。
+
+### 5. content_markdown 是唯一真相来源
+
+服务端在 JSON 响应里将相对 URL 展开为绝对 URL，使 `content_markdown` 可以脱离站点独立使用。CLI 在展示和导出时**直接使用 `content_markdown`**，不依赖 `content_html`，保证内容可移植。
+
+### 6. 极简依赖
+
+服务端只用了：Go 标准库、goldmark、SQLite。CLI 遵循同样的原则：**优先标准库，每引入一个外部依赖都需要充分理由**。
+
+### 7. 可组合性
+
+CLI 是 Unix 工具，应当可以管道组合：
+
+```bash
+kt timeline --json | jq '.posts[].author.username'
+kt post 42 --markdown | llm "summarize this"
+kt user karpathy --json | jq '.posts | length'
+```
+
+这要求 `--json` 输出**严格是纯 JSON**，stdout 不混入任何提示信息（提示信息走 stderr）。
+
+---
+
 ## 概述
 
 `kt` 是 KarpathyTalk 的命令行读取客户端，使用 Go 编写，与服务端同仓库。
