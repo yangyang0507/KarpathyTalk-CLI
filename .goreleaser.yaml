@@ -1,0 +1,73 @@
+version: 2
+
+project_name: kt
+
+builds:
+  - main: ./cmd/kt
+    binary: kt
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: Features
+      regexp: "^feat"
+      order: 0
+    - title: Bug Fixes
+      regexp: "^fix"
+      order: 1
+    - title: Documentation
+      regexp: "^docs"
+      order: 2
+    - title: Other
+      order: 999
+  filters:
+    exclude:
+      - "^chore"
+      - "^Merge"
+
+release:
+  github:
+    owner: yangyang0507
+    name: KarpathyTalk-CLI
+  draft: false
+  prerelease: auto  # tags like v1.0.0-beta.1 are marked pre-release automatically
+  footer: |
+    ## Installation
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/yangyang0507/KarpathyTalk-CLI/main/install.sh | sh
+    ```
+
+    Or download the binary for your platform from the assets above and place it on your `$PATH`.
+    Verify the download with `checksums.txt` (sha256).
