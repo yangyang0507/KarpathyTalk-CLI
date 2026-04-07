@@ -2,6 +2,21 @@
 
 [KarpathyTalk](https://karpathytalk.com) 的只读命令行客户端，由 Andrej Karpathy 创建的社交平台。可以在终端中浏览时间线、阅读帖子、查看用户主页。
 
+## 截图
+
+<table>
+  <tr>
+    <th align="center">时间线</th>
+    <th align="center">用户主页</th>
+    <th align="center">帖子详情</th>
+  </tr>
+  <tr>
+    <td><img src="docs/resources/timeline.png" alt="时间线视图" height="400" /></td>
+    <td><img src="docs/resources/user.png" alt="用户主页视图" height="400" /></td>
+    <td><img src="docs/resources/post.png" alt="帖子详情视图" height="400" /></td>
+  </tr>
+</table>
+
 ## 功能特性
 
 - **交互式 TUI** — 在终端中通过键盘快捷键浏览帖子
